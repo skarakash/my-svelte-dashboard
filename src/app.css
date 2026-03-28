@@ -1,0 +1,42 @@
+@tailwind utilities;
+
+body {
+	font-family: system-ui, sans-serif;
+}
+
+body,
+html {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+.chart-container {
+	background-color: papayawhip;
+	width: 100%;
+	height: 100%;
+}
+
+.data-point.champion {
+	fill: gold;
+}
+
+.data-point.relegated {
+	fill: red;
+}
+
+.data-point.empty {
+	fill: cadetblue;
+}
+
+.data-point {
+	fill: cadetblue;
+}
+
+.position {
+	pointer-events: none;
+	text-anchor: middle;
+	font-size: 10px;
+	fill: white;
+	/* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
+}
