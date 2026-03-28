@@ -17,6 +17,7 @@
 	let height = 600;
 	let markTooltipVisible = false;
 	let markTooltipData: TeamPosition | null = null;
+	let selectedTeamName: string | null = null;
 
 	const margin = { top: 100, right: 220, bottom: 150, left: 150 };
 	$: teams = data.stats
@@ -64,12 +65,12 @@
 		const gx = chart.append('g').attr('class', 'x-axis').call(d3.axisTop(xScale).tickSizeInner(0));
 		gx.select('.domain').remove();
 		gx.selectAll('text').attr('dy', '0.45em');
-		chart
-			.append('g')
-			.attr('class', 'y-axis')
-			.call(d3.axisLeft(yScale).tickSizeInner(0))
-			.select('.domain')
-			.remove();
+		// Y axis
+		const gy = chart.append('g').attr('class', 'y-axis').call(d3.axisLeft(yScale).tickSizeInner(0));
+		gy.select('.domain').remove();
+		gy.selectAll<SVGTextElement, string>('text').on('click', function (_, teamName: string) {
+			handleTeamClick(teamName);
+		});
 
 		drawMarks(xScale, yScale);
 		drawPositionLabels(xScale, yScale);
@@ -87,7 +88,10 @@
 						.attr('cx', (d: TeamPosition) => xScale(d.season)! + xScale.bandwidth() / 2)
 						.attr('cy', (d: TeamPosition) => yScale(d.short_name)! + yScale.bandwidth() / 2)
 						.attr('r', 0)
-						.attr('cursor', 'pointer');
+						.attr('cursor', 'pointer')
+						.style('opacity', (d: TeamPosition) =>
+							!selectedTeamName || selectedTeamName == d.short_name ? 1 : 0.25
+						);
 					circles
 						.transition()
 						.duration(900)
@@ -100,7 +104,10 @@
 						.duration(1200)
 						.ease(d3.easeCubicOut)
 						.attr('cx', (d: TeamPosition) => (xScale(d.season) ?? 0) + xScale.bandwidth() / 2)
-						.attr('cy', (d: TeamPosition) => (yScale(d.short_name) ?? 0) + yScale.bandwidth() / 2);
+						.attr('cy', (d: TeamPosition) => (yScale(d.short_name) ?? 0) + yScale.bandwidth() / 2)
+						.style('opacity', (d: TeamPosition) =>
+							!selectedTeamName || selectedTeamName == d.short_name ? 1 : 0.25
+						);
 					return update;
 				},
 				(exit) => exit.transition().duration(600).attr('r', 0).remove()
@@ -108,6 +115,40 @@
 			.on('mouseover', handleMarkMouseOver)
 			.on('mousemove', handleMarkMouseMove)
 			.on('mouseout', handleMarkMouseOut);
+	}
+
+	function handleTeamClick(teamName: string) {
+		if (selectedTeamName == teamName) {
+			selectedTeamName = null;
+		} else {
+			selectedTeamName = teamName;
+		}
+		updateMarksOnly();
+		updateTeamLabelsOnly();
+	}
+
+	function updateMarksOnly() {
+		if (!chart) return;
+		chart
+			.selectAll<SVGCircleElement, TeamPosition>('.data-point')
+			.transition()
+			.duration(200)
+			.style('opacity', function (d: TeamPosition) {
+				if (!selectedTeamName) return 1;
+				return selectedTeamName === d.short_name ? 1 : 0.25;
+			});
+	}
+
+	function updateTeamLabelsOnly() {
+		if (!chart) return;
+		chart
+			.selectAll<SVGTextElement, string>('.y-axis text')
+			.transition()
+			.duration(200)
+			.style('opacity', function (teamName: string) {
+				if (!selectedTeamName) return 1;
+				return selectedTeamName === teamName ? 1 : 0.25;
+			});
 	}
 
 	function drawPositionLabels(xScale: d3.ScaleBand<string>, yScale: d3.ScaleBand<string>) {
