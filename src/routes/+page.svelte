@@ -60,13 +60,10 @@
 
 		chart.selectAll('.x-axis').remove();
 		chart.selectAll('.y-axis').remove();
-
-		chart
-			.append('g')
-			.attr('class', 'x-axis')
-			.call(d3.axisTop(xScale).tickSizeInner(0))
-			.select('.domain')
-			.remove();
+		// X axis
+		const gx = chart.append('g').attr('class', 'x-axis').call(d3.axisTop(xScale).tickSizeInner(0));
+		gx.select('.domain').remove();
+		gx.selectAll('text').attr('dy', '0.45em');
 		chart
 			.append('g')
 			.attr('class', 'y-axis')
