@@ -40,3 +40,54 @@ html {
 	fill: white;
 	/* font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; */
 }
+.mark-tooltip {
+	position: absolute;
+	visibility: hidden;
+	background: white;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+	padding: 14px 18px;
+	font-size: 14px;
+	pointer-events: none;
+	z-index: 1000;
+	max-width: 260px;
+	line-height: 1.5;
+}
+
+.mark-tooltip.visible {
+	visibility: visible;
+}
+
+.tooltip-content strong {
+	font-size: 18px;
+	display: block;
+	margin-bottom: 4px;
+	color: #1e2937;
+}
+
+.tooltip-content strong.relegated {
+	color: red;
+}
+
+.tooltip-content strong.champion {
+	color: gold;
+}
+
+.tooltip-content-season {
+	color: #64748b;
+	font-size: 13px;
+	margin-bottom: 10px;
+}
+
+.tooltip-content-stats {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px 12px;
+	font-size: 13.5px;
+}
+
+.highlight {
+	font-weight: 700;
+	color: #1e40af;
+}

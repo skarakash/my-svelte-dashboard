@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import type { TeamPosition } from '../types.js';
-	import { getCircleClass } from '../utils.js';
+	import { getCircleClass, relegationMap } from '../utils.js';
 
 	export let data: { stats: TeamPosition[] };
 	let container: HTMLDivElement;
@@ -15,8 +15,10 @@
 
 	let width = 800;
 	let height = 600;
+	let markTooltipVisible = false;
+	let markTooltipData: TeamPosition | null = null;
 
-	const margin = { top: 100, right: 100, bottom: 150, left: 150 };
+	const margin = { top: 100, right: 220, bottom: 150, left: 150 };
 	$: teams = data.stats
 		? [...new Set(data.stats.map((team: TeamPosition) => team.short_name))]
 		: [];
@@ -105,7 +107,10 @@
 					return update;
 				},
 				(exit) => exit.transition().duration(600).attr('r', 0).remove()
-			);
+			)
+			.on('mouseover', handleMarkMouseOver)
+			.on('mousemove', handleMarkMouseMove)
+			.on('mouseout', handleMarkMouseOut);
 	}
 
 	function drawPositionLabels(xScale: d3.ScaleBand<string>, yScale: d3.ScaleBand<string>) {
@@ -139,9 +144,68 @@
 				(exit) => exit.transition().duration(500).attr('opacity', 0).remove()
 			);
 	}
+
+	function handleMarkMouseOver(_: MouseEvent, d: TeamPosition) {
+		if (!d.position) return;
+		const relegationPosition = relegationMap[d.season] || 18;
+		const isRelegated = d.position >= relegationPosition;
+		const isChampion = d.position == 1;
+		const icon = isChampion ? '🏆' : isRelegated ? '🔻' : '';
+		markTooltipData = { ...d, icon, isRelegated, isChampion };
+		markTooltipVisible = true;
+	}
+
+	function handleMarkMouseMove(event: MouseEvent) {
+		if (!markTooltipVisible) return;
+
+		const tooltip = document.querySelector('.mark-tooltip') as HTMLDivElement;
+		if (!tooltip) return;
+
+		//get tooltip size
+		const tooltipHeight = tooltip.offsetHeight;
+		const tooltipWidth = tooltip.offsetWidth;
+
+		// set x and y for tooltip position
+		let left = event.pageX + 15;
+		let top = event.pageY + 15;
+
+		// check if tooltip overflows container
+		if (left + tooltipWidth > window.innerWidth) {
+			left = event.pageX - tooltipWidth - 15;
+		}
+
+		if (top + tooltipHeight > window.innerHeight) {
+			top = event.pageY - tooltipHeight - 15;
+		}
+
+		tooltip.style.left = `${left}px`;
+		tooltip.style.top = `${top}px`;
+	}
+
+	function handleMarkMouseOut() {
+		markTooltipData = null;
+		markTooltipVisible = false;
+	}
 </script>
 
 <div bind:this={container} class="chart-container">
-	<!-- <h1>What was the teams end of the season positions in EPL era?</h1> -->
+	<div class="mark-tooltip" class:visible={markTooltipVisible}>
+		{#if markTooltipData}
+			<div class="tooltip-content">
+				<strong
+					class:champion={markTooltipData.isChampion}
+					class:relegated={markTooltipData.isRelegated}
+					>{markTooltipData.short_name} {markTooltipData.icon}</strong
+				>
+				<div class="tooltip-content-season">{markTooltipData.season}</div>
+				<div class="tooltip-content-stats">
+					<div>Position: <span class="highlight">{markTooltipData.position}</span></div>
+					<div>Points: <span class="highlight">{markTooltipData.points}</span></div>
+					<div>W{markTooltipData.won} • D{markTooltipData.drawn} • L{markTooltipData.lost}</div>
+					<div>GF{markTooltipData.goals_for} : GA{markTooltipData.goals_against}</div>
+				</div>
+			</div>
+		{/if}
+	</div>
 	<svg bind:this={svgEl}></svg>
 </div>

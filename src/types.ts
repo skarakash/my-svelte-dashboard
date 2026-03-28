@@ -13,4 +13,7 @@ export type TeamPosition = {
     short_name: string;
     team_id: number;
     won: number;
+    icon?: string;
+    isRelegated?: boolean;
+    isChampion?: boolean;
 };
