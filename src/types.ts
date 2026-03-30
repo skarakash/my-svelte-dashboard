@@ -17,3 +17,10 @@ export type TeamPosition = {
     isRelegated?: boolean;
     isChampion?: boolean;
 };
+
+export type SortKey = 'alpha' | 'titles' | 'relegations' | 'points';
+export type FilterItem = {
+    id: number;
+    key: SortKey;
+    label: string;
+}

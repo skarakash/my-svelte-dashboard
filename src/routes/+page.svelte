@@ -1,10 +1,27 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
-	import type { TeamPosition } from '../types.js';
-	import { getCircleClass, relegationMap } from '../utils.js';
+	import type { TeamPosition, SortKey } from '../types.js';
+	import { getCircleClass, relegationMap, getSortedTeams, filters } from '../utils.js';
+	import { onMount } from 'svelte';
 
-	export let data: { stats: TeamPosition[] };
+	let { data } = $props<{ data: { stats: TeamPosition[] } }>();
+	const margin = { top: 100, right: 220, bottom: 150, left: 150 };
+
+	let currentSortKey = $state<SortKey>('alpha');
+	let selectedTeamName = $state<string | null>(null);
+	let markTooltipVisible = $state<boolean>(false);
+	let markTooltipData = $state<TeamPosition | null>(null);
+	let width = $state<number>(1300);
+	let height = $state<number>(1200);
+
+	let stats = $derived<TeamPosition[]>(data.stats);
+	const sortedTeamNames = $derived<string[]>(stats ? getSortedTeams(currentSortKey, stats) : []);
+	const seasons = $derived<string[]>(
+		stats ? [...new Set(stats.map((item: TeamPosition) => item.season))] : []
+	);
+	const innerWidth = $derived<number>(width - margin.left - margin.right);
+	const innerHeight = $derived<number>(height - margin.top - margin.bottom);
+
 	let container: HTMLDivElement;
 	let svgEl: SVGSVGElement;
 
@@ -13,73 +30,59 @@
 	let marks: d3.Selection<SVGGElement, unknown, null, undefined>;
 	let labels: d3.Selection<SVGGElement, unknown, null, undefined>;
 
-	let width = 800;
-	let height = 600;
-	let markTooltipVisible = false;
-	let markTooltipData: TeamPosition | null = null;
-	let selectedTeamName: string | null = null;
-
-	const margin = { top: 100, right: 220, bottom: 150, left: 150 };
-	$: teams = data.stats
-		? [...new Set(data.stats.map((team: TeamPosition) => team.short_name))]
-		: [];
-	$: seasons = data.stats ? [...new Set(data.stats.map((item: TeamPosition) => item.season))] : [];
-
 	onMount(() => {
 		svg = d3.select(svgEl);
 		chart = svg.append('g').attr('transform', `translate(${margin.left}, ${margin.top})`);
+		chart.append('g').attr('class', 'x-axis');
+		chart.append('g').attr('class', 'y-axis');
 		marks = chart.append('g').attr('class', 'marks');
 		labels = chart.append('g').attr('class', 'labels');
-
-		const resizeObserver = new ResizeObserver(() => updateDimensions());
-		resizeObserver.observe(container);
-
-		return () => resizeObserver.disconnect();
 	});
 
-	function updateDimensions() {
-		if (!container) return;
+	$effect(() => {
+		const currentTeamNames = sortedTeamNames;
+		const currentStats = stats;
 
-		width = container.clientWidth;
-		height = container.clientHeight;
-
-		svg.attr('width', width).attr('height', height);
-
-		updateChart();
-	}
-
-	function updateChart() {
-		if (!data.stats || !chart) return;
-		const innerWidth = width - margin.left - margin.right;
-		const innerHeight = height - margin.top - margin.bottom;
-
-		// Scales
+		if (!currentStats?.length || !chart) return;
 		const xScale = d3.scaleBand<string>().domain(seasons).range([0, innerWidth]).padding(0.12);
-		const yScale = d3.scaleBand<string>().domain(teams).range([0, innerHeight]).padding(0.12);
+		const yScale = d3
+			.scaleBand<string>()
+			.domain(currentTeamNames)
+			.range([0, innerHeight])
+			.padding(0.12);
 
-		// Axes
-
-		chart.selectAll('.x-axis').remove();
-		chart.selectAll('.y-axis').remove();
-		// X axis
-		const gx = chart.append('g').attr('class', 'x-axis').call(d3.axisTop(xScale).tickSizeInner(0));
-		gx.select('.domain').remove();
-		gx.selectAll('text').attr('dy', '0.45em');
-		// Y axis
-		const gy = chart.append('g').attr('class', 'y-axis').call(d3.axisLeft(yScale).tickSizeInner(0));
-		gy.select('.domain').remove();
-		gy.selectAll<SVGTextElement, string>('text').on('click', function (_, teamName: string) {
-			handleTeamClick(teamName);
-		});
-
+		drawAxes(xScale, yScale);
 		drawMarks(xScale, yScale);
 		drawPositionLabels(xScale, yScale);
+	});
+
+	function drawAxes(xScale: d3.ScaleBand<string>, yScale: d3.ScaleBand<string>) {
+		if (!stats || !chart) return;
+
+		const gx = chart.select<SVGGElement>('.x-axis');
+		const gy = chart.select<SVGGElement>('.y-axis');
+
+		gx.transition().duration(1200).call(d3.axisTop(xScale).tickSizeInner(0));
+		gx.attr('dy', '0.45em');
+		gx.select('.domain').remove().selectAll('text');
+
+		gy.transition()
+			.duration(1200)
+			.ease(d3.easeCubicOut)
+			.call(d3.axisLeft(yScale).tickSizeInner(0))
+			.on('end', () => {
+				gy.selectAll<SVGTextElement, string>('text').on('click', function (_, teamName: string) {
+					handleTeamClick(teamName);
+				});
+			});
+		gy.select('.domain').remove();
 	}
 
 	function drawMarks(xScale: d3.ScaleBand<string>, yScale: d3.ScaleBand<string>) {
+		const makrsArr = stats.filter((d: TeamPosition) => d.position);
 		marks
 			.selectAll<SVGCircleElement, TeamPosition>('circle.data-point')
-			.data(data.stats, (d: TeamPosition) => `${d.season}-${d.short_name}`)
+			.data(makrsArr, (d: TeamPosition) => `${d.season}-${d.team_id}`)
 			.join(
 				(enter) => {
 					const circles = enter
@@ -123,39 +126,13 @@
 		} else {
 			selectedTeamName = teamName;
 		}
-		updateMarksOnly();
-		updateTeamLabelsOnly();
-	}
-
-	function updateMarksOnly() {
-		if (!chart) return;
-		chart
-			.selectAll<SVGCircleElement, TeamPosition>('.data-point')
-			.transition()
-			.duration(200)
-			.style('opacity', function (d: TeamPosition) {
-				if (!selectedTeamName) return 1;
-				return selectedTeamName === d.short_name ? 1 : 0.25;
-			});
-	}
-
-	function updateTeamLabelsOnly() {
-		if (!chart) return;
-		chart
-			.selectAll<SVGTextElement, string>('.y-axis text')
-			.transition()
-			.duration(200)
-			.style('opacity', function (teamName: string) {
-				if (!selectedTeamName) return 1;
-				return selectedTeamName === teamName ? 1 : 0.25;
-			});
 	}
 
 	function drawPositionLabels(xScale: d3.ScaleBand<string>, yScale: d3.ScaleBand<string>) {
-		const labelsArr = data.stats.filter((d: TeamPosition) => d.position);
+		const labelsArr = stats.filter((d: TeamPosition) => d.position);
 		labels
 			.selectAll<SVGTextElement, TeamPosition>('text.position')
-			.data(labelsArr)
+			.data(labelsArr, (d: TeamPosition) => `${d.season}-${d.short_name}`)
 			.join(
 				(enter) => {
 					const labelsData = enter
@@ -226,6 +203,12 @@
 	}
 </script>
 
+<div class="filters-wrapper">
+	{#each filters as filter (filter.id)}
+		<button type="button" onclick={() => (currentSortKey = filter.key)}>{filter.label}</button>
+	{/each}
+</div>
+
 <div bind:this={container} class="chart-container">
 	<div class="mark-tooltip" class:visible={markTooltipVisible}>
 		{#if markTooltipData}
@@ -245,5 +228,5 @@
 			</div>
 		{/if}
 	</div>
-	<svg bind:this={svgEl}></svg>
+	<svg bind:this={svgEl} style="width: 100%;height:100%"></svg>
 </div>

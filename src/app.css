@@ -12,6 +12,7 @@ html {
 }
 
 .chart-container {
+	position: relative;
 	background-color: papayawhip;
 	width: 100%;
 	height: 100%;
@@ -26,7 +27,7 @@ html {
 
 .y-axis text:hover {
 	cursor: pointer;
-  opacity: 0.8;
+	opacity: 0.8;
 }
 
 .x-axis text {
@@ -34,8 +35,8 @@ html {
 	font-size: 14px;
 	font-weight: bold;
 	color: cadetblue;
-  transform: rotate(-90deg);
-  text-anchor: start;
+	transform: rotate(-90deg);
+	text-anchor: start;
 }
 
 .data-point.champion {
@@ -64,7 +65,7 @@ html {
 .mark-tooltip {
 	position: absolute;
 	visibility: hidden;
-	background: white;
+	background: #eff5f5;
 	border: 1px solid #e2e8f0;
 	border-radius: 10px;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -84,7 +85,7 @@ html {
 	font-size: 18px;
 	display: block;
 	margin-bottom: 4px;
-	color: #1e2937;
+	color: cadetblue;
 }
 
 .tooltip-content strong.relegated {
@@ -99,6 +100,7 @@ html {
 	color: #64748b;
 	font-size: 13px;
 	margin-bottom: 10px;
+	font-weight: 700;
 }
 
 .tooltip-content-stats {
@@ -111,4 +113,20 @@ html {
 .highlight {
 	font-weight: 700;
 	color: #1e40af;
+}
+
+.filters-wrapper {
+	position: absolute;
+}
+
+.filters-wrapper button {
+	width: 100px;
+	height: auto;
+	border: 1px solid grey;
+	border-radius: 2px;
+	cursor: pointer;
+}
+
+.filters-wrapper button.active {
+	background: blueviolet;
 }
