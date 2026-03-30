@@ -1,3 +1,38 @@
+# Premier League Seasons Matrix
+
+A beautiful interactive visualization that shows how every team has performed across all Premier League seasons (1992/93 – present).
+
+## What is this?
+
+This project visualizes **historical Premier League standings** as a matrix:
+
+- **Rows** = Teams (sortable)
+- **Columns** = Seasons
+- **Circles** represent each team's position in that season
+- Color coding highlights **Champions** (gold), **Top teams**, **Mid-table**, and **Relegated** teams (red)
+
+### Key Features
+
+- **Interactive sorting** — Sort teams by:
+  - A–Z (Alphabetical)
+  - Most Titles
+  - Most Relegations
+  - Most Points (cumulative)
+- **Click any team** on the Y-axis to highlight all their seasons
+- **Hover** on any circle to see detailed statistics for that season
+- Smooth transitions when sorting or selecting teams
+
+## The Question This Answers
+
+> **"How have different teams performed across the history of the Premier League?"**
+
+It makes it easy to spot:
+- Consistent top performers
+- Teams that frequently get relegated ("yo-yo clubs")
+- Teams that had golden eras
+- Long-term trends in the league
+
+
 # sv
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
