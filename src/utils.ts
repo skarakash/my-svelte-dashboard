@@ -7,7 +7,7 @@ export const relegationMap: Record<string, number> = {
 };
 
 export const filters: FilterItem[] = [
-    { id: 1, key: 'alpha', label: 'Alpabetical' },
+    { id: 1, key: 'alpha', label: 'A-Z' },
     { id: 2, key: 'points', label: 'Points' },
     { id: 3, key: 'relegations', label: 'Relegations' },
     { id: 4, key: 'titles', label: "Titles" },
@@ -35,8 +35,8 @@ export function getSortedTeams(key: SortKey, data: TeamPosition[]): string[] {
             });
         case 'relegations':
             return unique.sort((a, b) => {
-                const ca = data.filter(t => t.short_name === a && t.position >= 18).length;
-                const cb = data.filter(t => t.short_name === b && t.position >= 18).length;
+                const ca = data.filter(t => t.short_name === a && t.position >= (relegationMap[t.season] || 18)).length;
+                const cb = data.filter(t => t.short_name === b && t.position >= (relegationMap[t.season] || 18)).length;
                 return cb - ca;
             });
         case 'points':

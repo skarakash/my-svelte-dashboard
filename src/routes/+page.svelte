@@ -42,7 +42,6 @@
 	$effect(() => {
 		const currentTeamNames = sortedTeamNames;
 		const currentStats = stats;
-
 		if (!currentStats?.length || !chart) return;
 		const xScale = d3.scaleBand<string>().domain(seasons).range([0, innerWidth]).padding(0.12);
 		const yScale = d3
@@ -93,12 +92,9 @@
 						.attr('r', 0)
 						.attr('cursor', 'pointer')
 						.style('opacity', (d: TeamPosition) =>
-							!selectedTeamName || selectedTeamName == d.short_name ? 1 : 0.25
+							!selectedTeamName || selectedTeamName == d.short_name ? 1 : 0.15
 						);
-					circles
-						.transition()
-						.duration(900)
-						.attr('r', (d: TeamPosition) => (d.position ? 8 : 1.3));
+					circles.transition().duration(900).attr('r', 8);
 					return circles;
 				},
 				(update) => {
@@ -109,7 +105,7 @@
 						.attr('cx', (d: TeamPosition) => (xScale(d.season) ?? 0) + xScale.bandwidth() / 2)
 						.attr('cy', (d: TeamPosition) => (yScale(d.short_name) ?? 0) + yScale.bandwidth() / 2)
 						.style('opacity', (d: TeamPosition) =>
-							!selectedTeamName || selectedTeamName == d.short_name ? 1 : 0.25
+							!selectedTeamName || selectedTeamName == d.short_name ? 1 : 0.15
 						);
 					return update;
 				},
@@ -117,7 +113,10 @@
 			)
 			.on('mouseover', handleMarkMouseOver)
 			.on('mousemove', handleMarkMouseMove)
-			.on('mouseout', handleMarkMouseOut);
+			.on('mouseout', handleMarkMouseOut)
+			.on('click', function (event, datum) {
+				console.log(datum);
+			});
 	}
 
 	function handleTeamClick(teamName: string) {
@@ -203,13 +202,16 @@
 	}
 </script>
 
-<div class="filters-wrapper">
-	{#each filters as filter (filter.id)}
-		<button type="button" onclick={() => (currentSortKey = filter.key)}>{filter.label}</button>
-	{/each}
-</div>
-
 <div bind:this={container} class="chart-container">
+	<div class="filters-wrapper">
+		{#each filters as filter (filter.id)}
+			<button
+				type="button"
+				onclick={() => (currentSortKey = filter.key)}
+				class:active={currentSortKey == filter.key}>{filter.label}</button
+			>
+		{/each}
+	</div>
 	<div class="mark-tooltip" class:visible={markTooltipVisible}>
 		{#if markTooltipData}
 			<div class="tooltip-content">
@@ -229,4 +231,5 @@
 		{/if}
 	</div>
 	<svg bind:this={svgEl} style="width: 100%;height:100%"></svg>
+	<h1>Premier League Seasons Matrix</h1>
 </div>
