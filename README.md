@@ -2,6 +2,8 @@
 
 A beautiful interactive visualization that shows how every team has performed across all Premier League seasons (1992/93 – present).
 
+<img width="1231" height="1053" alt="Screenshot 2026-04-01 at 23 26 56" src="https://github.com/user-attachments/assets/c8210df8-dcb7-4ce4-9e82-972222200b86" />
+
 ## What is this?
 
 This project visualizes **historical Premier League standings** as a matrix:
