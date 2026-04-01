@@ -13,9 +13,10 @@ export type TeamPosition = {
     short_name: string;
     team_id: number;
     won: number;
-    icon?: string;
-    isRelegated?: boolean;
-    isChampion?: boolean;
+    icon: string;
+    isRelegated: boolean;
+    isChampion: boolean;
+    cssClass: string;
 };
 
 export type SortKey = 'alpha' | 'titles' | 'relegations' | 'points';

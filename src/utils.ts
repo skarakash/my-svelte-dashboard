@@ -13,6 +13,15 @@ export const filters: FilterItem[] = [
     { id: 4, key: 'titles', label: "Titles" },
 ]
 
+export const isRelegated = (d: TeamPosition) => {
+    const relegationPositionPerSeason = relegationMap[d.season] || 18
+    return d.position >= relegationPositionPerSeason
+}
+
+export const isChampion = (d: TeamPosition) => d.position === 1
+
+export const getIcon = (d: TeamPosition) => isChampion(d) ? '🏆' : isRelegated(d) ? '🔻' : ''
+
 export function getCircleClass(d: TeamPosition): string {
     if (d.position === 1) return 'champion';
     if (d.position && (relegationMap[d.season] ? d.position >= relegationMap[d.season] : d.position >= 18)) {
